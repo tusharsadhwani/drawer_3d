@@ -93,6 +93,7 @@ class _MyHomePageState extends State<MyHomePage>
           ),
         ),
         MyDrawer(
+          controller: _controller,
           animation: _animation,
           onDismissed: _closeDrawer,
           drawerWidth: width,
@@ -102,33 +103,90 @@ class _MyHomePageState extends State<MyHomePage>
   }
 }
 
-class MyDrawer extends StatelessWidget {
+class MyDrawer extends StatefulWidget {
   final double drawerWidth;
   final Function onDismissed;
+  final AnimationController controller;
   final Animation animation;
 
-  const MyDrawer({Key key, this.drawerWidth, this.onDismissed, this.animation})
-      : super(key: key);
+  const MyDrawer({
+    Key key,
+    @required this.controller,
+    @required this.drawerWidth,
+    @required this.onDismissed,
+    @required this.animation,
+  }) : super(key: key);
+
+  @override
+  _MyDrawerState createState() => _MyDrawerState();
+}
+
+class _MyDrawerState extends State<MyDrawer> {
+  bool canBeDragged;
+
+  @override
+  void initState() {
+    canBeDragged = false;
+    super.initState();
+  }
+
+  void onDragStart(DragStartDetails details) {
+    bool isClosed = widget.controller.isDismissed;
+
+    bool isOpen = widget.controller.isCompleted;
+
+    canBeDragged = (isClosed && details.globalPosition.dx < 60) || isOpen;
+  }
+
+  void onDragUpdate(DragUpdateDetails details) {
+    if (canBeDragged) {
+      double delta = details.primaryDelta / widget.drawerWidth;
+      widget.controller.value += delta;
+    }
+  }
+
+  void onDragEnd(DragEndDetails details) {
+    //I have no idea what it means, copied from Drawer
+    double _kMinFlingVelocity = 365.0;
+
+    if (widget.controller.isDismissed || widget.controller.isCompleted) {
+      return;
+    }
+    if (details.velocity.pixelsPerSecond.dx.abs() >= _kMinFlingVelocity) {
+      double visualVelocity =
+          details.velocity.pixelsPerSecond.dx / widget.drawerWidth;
+
+      widget.controller.fling(velocity: visualVelocity);
+    } else if (widget.controller.value < 0.5) {
+      widget.controller.reverse();
+    } else {
+      widget.controller.forward();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: animation,
+      animation: widget.animation,
       builder: (_, __) => Stack(
         children: <Widget>[
           GestureDetector(
-            onTap: animation.value == 1 ? onDismissed : null,
+            onTap: widget.animation.value == 1 ? widget.onDismissed : null,
+            onHorizontalDragStart: onDragStart,
+            onHorizontalDragUpdate: onDragUpdate,
+            onHorizontalDragEnd: onDragEnd,
           ),
           Transform.translate(
-            offset: Offset(-drawerWidth * (1 - animation.value), 0),
+            offset:
+                Offset(-widget.drawerWidth * (1 - widget.animation.value), 0),
             child: Transform(
               alignment: Alignment.centerRight,
               transform: Matrix4.identity()
                 ..setEntry(3, 2, 0.001)
-                ..rotateY(pi / 2 * (1 - animation.value)),
+                ..rotateY(pi / 2 * (1 - widget.animation.value)),
               child: Material(
                 child: Container(
-                  width: drawerWidth,
+                  width: widget.drawerWidth,
                   height: double.infinity,
                   color: Colors.blue,
                   child: SafeArea(
