@@ -41,7 +41,7 @@ class _MyHomePageState extends State<MyHomePage>
     _controller = AnimationController(
       vsync: this,
       duration: Duration(
-        milliseconds: 500,
+        milliseconds: 300,
       ),
     );
     _animation = CurvedAnimation(
