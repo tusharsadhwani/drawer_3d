@@ -1,127 +1,30 @@
-import 'dart:math';
-import 'dart:ui';
+library drawer_3d;
+
+import 'dart:math' show pi;
 
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage>
-    with SingleTickerProviderStateMixin {
-  AnimationController _controller;
-  Animation _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: Duration(
-        milliseconds: 300,
-      ),
-    );
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOutQuad,
-    );
-  }
-
-  void _openDrawer() {
-    _controller.forward();
-  }
-
-  void _closeDrawer() {
-    _controller.reverse();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width * 0.7;
-
-    return Stack(
-      children: [
-        Container(
-          color: Colors.blueGrey.shade700,
-        ),
-        AnimatedBuilder(
-          animation: _animation,
-          builder: (_, __) => Transform.translate(
-            offset: Offset(width * _animation.value, 0),
-            child: Transform(
-              alignment: Alignment.centerLeft,
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.001)
-                ..rotateY(-pi / 2 * _animation.value),
-              child: Scaffold(
-                appBar: AppBar(
-                  title: Text(widget.title),
-                  leading: IconButton(
-                      icon: Icon(Icons.menu), onPressed: _openDrawer),
-                ),
-                body: Center(
-                  child: Text(
-                    'Hello World!',
-                    style: TextStyle(fontSize: 36, color: Colors.grey.shade600),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        MyDrawer(
-          controller: _controller,
-          animation: _animation,
-          onDismissed: _closeDrawer,
-          drawerWidth: width,
-        ),
-      ],
-    );
-  }
-}
-
-class MyDrawer extends StatefulWidget {
+class Drawer3D extends StatefulWidget {
   final double drawerWidth;
   final Function onDismissed;
   final AnimationController controller;
   final Animation animation;
+  final List<Widget> children;
 
-  const MyDrawer({
+  const Drawer3D({
     Key key,
     @required this.controller,
     @required this.drawerWidth,
     @required this.onDismissed,
     @required this.animation,
+    @required this.children,
   }) : super(key: key);
 
   @override
-  _MyDrawerState createState() => _MyDrawerState();
+  _Drawer3DState createState() => _Drawer3DState();
 }
 
-class _MyDrawerState extends State<MyDrawer> {
+class _Drawer3DState extends State<Drawer3D> {
   bool canBeDragged;
 
   @override
@@ -209,10 +112,7 @@ class _MyDrawerState extends State<MyDrawer> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            DrawerItem('Home'),
-                            DrawerItem('Test'),
-                          ],
+                          children: widget.children,
                         ),
                       ],
                     ),
